@@ -1,0 +1,333 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseHardware</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ph-black: #080808; --ph-deep: #0d0d0f; --ph-surface: #111114; --ph-card: #16161a;
+    --ph-border: rgba(255,255,255,0.07); --ph-border-bright: rgba(255,255,255,0.15);
+    --ph-cyan: #00e5ff; --ph-orange: #ff6b35; --ph-white: #f0f0f2;
+    --ph-muted: rgba(240,240,242,0.45); --ph-faint: rgba(240,240,242,0.2);
+    --ph-font-display: 'Bebas Neue', sans-serif; --ph-font-body: 'Space Grotesk', sans-serif; --ph-font-mono: 'JetBrains Mono', monospace;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--ph-black); color: var(--ph-white); font-family: var(--ph-font-body); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 9999; opacity: 0.6; }
+
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1.25rem 2.5rem; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(to bottom, rgba(8,8,8,0.95) 0%, transparent 100%); backdrop-filter: blur(12px); border-bottom: 0.5px solid var(--ph-border); }
+  .nav-logo { font-family: var(--ph-font-display); font-size: 1.6rem; letter-spacing: 0.08em; }
+  .nav-logo span { color: var(--ph-cyan); }
+  .nav-pill { font-family: var(--ph-font-mono); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.2em; color: var(--ph-cyan); border: 1px solid var(--ph-cyan); padding: 0.4rem 1rem; cursor: pointer; text-transform: uppercase; transition: all 0.2s; animation: pulse-border 2s infinite; background: transparent; }
+  .nav-pill:hover { background: var(--ph-cyan); color: var(--ph-black); }
+  @keyframes pulse-border { 0%, 100% { box-shadow: 0 0 0 0 rgba(0,229,255,0); } 50% { box-shadow: 0 0 0 4px rgba(0,229,255,0.15); } }
+
+  .hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8rem 2rem 4rem; position: relative; overflow: hidden; text-align: center; }
+  .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px); background-size: 60px 60px; animation: grid-drift 20s linear infinite; }
+  @keyframes grid-drift { from { transform: translateY(0); } to { transform: translateY(60px); } }
+  .hero-glow { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); width: 600px; height: 600px; background: radial-gradient(ellipse, rgba(0,229,255,0.08) 0%, transparent 70%); pointer-events: none; }
+  .hero-eyebrow { font-family: var(--ph-font-mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.3em; color: var(--ph-cyan); text-transform: uppercase; margin-bottom: 1.5rem; position: relative; display: inline-flex; align-items: center; gap: 0.75rem; }
+  .hero-eyebrow::before, .hero-eyebrow::after { content: ''; width: 40px; height: 1px; background: var(--ph-cyan); opacity: 0.6; }
+  .hero-headline { font-family: var(--ph-font-display); font-size: clamp(4.5rem, 12vw, 9rem); line-height: 0.9; letter-spacing: 0.02em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .hero-headline .accent { color: var(--ph-cyan); }
+  .hero-sub { font-size: 1.05rem; color: var(--ph-muted); max-width: 480px; line-height: 1.7; margin: 1.5rem auto 3rem; position: relative; }
+  .hero-cta-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; position: relative; }
+  .btn-primary { font-family: var(--ph-font-mono); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 1rem 2.5rem; background: var(--ph-cyan); color: var(--ph-black); border: none; cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden; }
+  .btn-primary::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transition: 0.4s; }
+  .btn-primary:hover::before { left: 100%; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,229,255,0.35); }
+  .btn-ghost { font-family: var(--ph-font-mono); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 1rem 2.5rem; background: transparent; color: var(--ph-white); border: 1px solid var(--ph-border-bright); cursor: pointer; transition: all 0.25s; }
+  .btn-ghost:hover { border-color: var(--ph-cyan); color: var(--ph-cyan); }
+
+  .metrics-strip { display: flex; justify-content: center; border-top: 1px solid var(--ph-border); border-bottom: 1px solid var(--ph-border); margin: 4rem 0; overflow: hidden; }
+  .metric-item { flex: 1; max-width: 200px; padding: 2rem 1.5rem; text-align: center; border-right: 1px solid var(--ph-border); }
+  .metric-item:last-child { border-right: none; }
+  .metric-num { font-family: var(--ph-font-display); font-size: 3rem; color: var(--ph-cyan); letter-spacing: 0.05em; line-height: 1; display: block; }
+  .metric-label { font-family: var(--ph-font-mono); font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ph-muted); margin-top: 0.4rem; display: block; }
+
+  section { padding: 5rem 2rem; max-width: 1100px; margin: 0 auto; }
+  .section-label { font-family: var(--ph-font-mono); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.3em; color: var(--ph-cyan); text-transform: uppercase; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--ph-border); }
+  .section-title { font-family: var(--ph-font-display); font-size: clamp(2.5rem, 5vw, 4rem); text-transform: uppercase; letter-spacing: 0.03em; line-height: 1; margin-bottom: 1rem; }
+
+  .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--ph-border); margin-top: 3rem; border: 1px solid var(--ph-border); }
+  .feature-card { background: var(--ph-surface); padding: 2rem 1.75rem; transition: background 0.2s; position: relative; overflow: hidden; }
+  .feature-card::before { content: ''; position: absolute; top: 0; left: 0; width: 2px; height: 0; background: var(--ph-cyan); transition: height 0.3s; }
+  .feature-card:hover { background: var(--ph-card); }
+  .feature-card:hover::before { height: 100%; }
+  .feature-icon { width: 40px; height: 40px; border: 1px solid var(--ph-cyan); display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; color: var(--ph-cyan); }
+  .feature-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+  .feature-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .feature-desc { font-size: 0.82rem; color: var(--ph-muted); line-height: 1.6; }
+
+  .plans-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 3rem; }
+  .plan-card { background: var(--ph-surface); border: 1px solid var(--ph-border); padding: 2.5rem 2rem; position: relative; transition: transform 0.25s, border-color 0.25s; display: flex; flex-direction: column; }
+  .plan-card:hover { transform: translateY(-4px); border-color: var(--ph-border-bright); }
+  .plan-card.featured { border-color: var(--ph-cyan); background: linear-gradient(160deg, rgba(0,229,255,0.05) 0%, var(--ph-surface) 60%); }
+  .plan-badge { position: absolute; top: -1px; left: 50%; transform: translateX(-50%); background: var(--ph-cyan); color: var(--ph-black); font-family: var(--ph-font-mono); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; padding: 0.3rem 1rem; }
+  .plan-name { font-family: var(--ph-font-display); font-size: 1.8rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .plan-price { font-family: var(--ph-font-display); font-size: 3.2rem; color: var(--ph-cyan); line-height: 1; margin-bottom: 0.25rem; }
+  .plan-price-sub { font-family: var(--ph-font-mono); font-size: 0.65rem; color: var(--ph-muted); letter-spacing: 0.1em; margin-bottom: 2rem; }
+  .plan-divider { height: 1px; background: var(--ph-border); margin-bottom: 1.75rem; }
+  .plan-features { list-style: none; flex: 1; margin-bottom: 2rem; }
+  .plan-features li { font-size: 0.82rem; color: var(--ph-muted); line-height: 1.5; padding: 0.45rem 0; border-bottom: 1px solid var(--ph-border); display: flex; align-items: flex-start; gap: 0.6rem; }
+  .plan-features li::before { content: ''; width: 6px; height: 6px; background: var(--ph-cyan); flex-shrink: 0; margin-top: 0.35rem; }
+  .plan-cta { display: block; text-align: center; font-family: var(--ph-font-mono); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; padding: 0.9rem; border: 1px solid var(--ph-border-bright); color: var(--ph-white); cursor: pointer; transition: all 0.25s; background: transparent; width: 100%; }
+  .plan-cta:hover, .featured .plan-cta { background: var(--ph-cyan); color: var(--ph-black); border-color: var(--ph-cyan); }
+
+  .why-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 3rem; }
+  .why-card { background: var(--ph-surface); border: 1px solid var(--ph-border); padding: 1.75rem 2rem; display: flex; gap: 1.25rem; align-items: flex-start; transition: border-color 0.2s; }
+  .why-card:hover { border-color: var(--ph-border-bright); }
+  .why-num { font-family: var(--ph-font-display); font-size: 2.5rem; color: var(--ph-border-bright); line-height: 1; flex-shrink: 0; min-width: 50px; transition: color 0.2s; }
+  .why-card:hover .why-num { color: var(--ph-cyan); }
+  .why-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.35rem; }
+  .why-desc { font-size: 0.8rem; color: var(--ph-muted); line-height: 1.6; }
+
+  .form-section { background: var(--ph-deep); border-top: 1px solid var(--ph-border); border-bottom: 1px solid var(--ph-border); padding: 5rem 2rem; text-align: center; position: relative; overflow: hidden; }
+  .form-section::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 800px; height: 400px; background: radial-gradient(ellipse, rgba(0,229,255,0.05) 0%, transparent 70%); pointer-events: none; }
+  .form-inner { max-width: 600px; margin: 0 auto; position: relative; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 2.5rem; text-align: left; }
+  .form-field { display: flex; flex-direction: column; gap: 0.4rem; }
+  .form-field.full { grid-column: 1 / -1; }
+  .form-label { font-family: var(--ph-font-mono); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ph-cyan); }
+  .form-input, .form-select { background: var(--ph-surface); border: 1px solid var(--ph-border); color: var(--ph-white); font-family: var(--ph-font-body); font-size: 0.875rem; padding: 0.8rem 1rem; outline: none; transition: border-color 0.2s; appearance: none; -webkit-appearance: none; width: 100%; }
+  .form-input:focus, .form-select:focus { border-color: var(--ph-cyan); }
+  .form-input::placeholder { color: var(--ph-faint); }
+  .form-select option { background: var(--ph-surface); color: var(--ph-white); }
+  .form-submit { width: 100%; margin-top: 1rem; background: #25D366; color: #fff; border: none; font-family: var(--ph-font-mono); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; padding: 1.1rem; cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 0.75rem; }
+  .form-submit::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent); transform: translateX(-100%); transition: 0.5s; }
+  .form-submit:hover::before { transform: translateX(100%); }
+  .form-submit:hover { box-shadow: 0 0 30px rgba(37,211,102,0.4); transform: translateY(-1px); }
+  .wa-icon { width: 20px; height: 20px; fill: white; flex-shrink: 0; }
+  .form-note { font-family: var(--ph-font-mono); font-size: 0.62rem; color: var(--ph-muted); letter-spacing: 0.08em; margin-top: 0.75rem; }
+
+  footer { padding: 2rem; border-top: 1px solid var(--ph-border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+  .footer-logo { font-family: var(--ph-font-display); font-size: 1.2rem; letter-spacing: 0.08em; }
+  .footer-logo span { color: var(--ph-cyan); }
+  .footer-copy { font-family: var(--ph-font-mono); font-size: 0.65rem; color: var(--ph-faint); letter-spacing: 0.1em; }
+
+  .scan-line { position: fixed; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--ph-cyan), transparent); opacity: 0.6; animation: scan 4s linear infinite; pointer-events: none; z-index: 9998; }
+  @keyframes scan { from { top: 0; } to { top: 100vh; } }
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  @media (max-width: 768px) {
+    nav { padding: 1rem 1.25rem; }
+    .features-grid { grid-template-columns: 1fr; }
+    .plans-grid { grid-template-columns: 1fr; }
+    .why-grid { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .metrics-strip { flex-wrap: wrap; }
+    .metric-item { min-width: 120px; border-right: none; border-bottom: 1px solid var(--ph-border); }
+  }
+</style>
+</head>
+<body>
+<div class="scan-line"></div>
+
+<nav>
+  <div class="nav-logo"><span>PULSE</span>HARDWARE</div>
+  <button class="nav-pill" onclick="document.getElementById('agendar').scrollIntoView({behavior:'smooth'})">Agendar turno →</button>
+</nav>
+
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <p class="hero-eyebrow">Optimización Profesional de PC · Servicio Remoto</p>
+  <h1 class="hero-headline">Optimizá<br>tu PC.<br><span class="accent">Sentí la<br>diferencia.</span></h1>
+  <p class="hero-sub">Rendimiento real, resultados medibles. Cada ajuste hecho a mano por expertos — sin scripts genéricos, sin compromisos.</p>
+  <div class="hero-cta-group">
+    <button class="btn-primary" onclick="document.getElementById('planes').scrollIntoView({behavior:'smooth'})">Ver planes</button>
+    <button class="btn-ghost" onclick="document.getElementById('agendar').scrollIntoView({behavior:'smooth'})">Agendar ahora</button>
+  </div>
+</div>
+
+<div class="metrics-strip reveal">
+  <div class="metric-item"><span class="metric-num" data-count="2">0</span><span class="metric-label">×2 FPS posible</span></div>
+  <div class="metric-item"><span class="metric-num" data-count="100">0</span><span class="metric-label">% Manual</span></div>
+  <div class="metric-item"><span class="metric-num" data-count="0">0</span><span class="metric-label">Datos borrados</span></div>
+  <div class="metric-item">
+    <span class="metric-num" data-count="15">0</span>
+    <span class="metric-label">min promedio de demora</span>
+  </div>
+  <div class="metric-item"><span class="metric-num" data-count="3">0</span><span class="metric-label">Planes disponibles</span></div>
+</div>
+
+<section>
+  <div class="section-label reveal">Resultados que vas a notar</div>
+  <h2 class="section-title reveal">Rendimiento<br><span style="color:var(--ph-cyan)">sin límites.</span></h2>
+  <div class="features-grid reveal">
+    <div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="feature-title">Mayor velocidad general</div><div class="feature-desc">Desde el primer encendido, todo responde más rápido. Tiempos de carga reducidos, arranque instantáneo.</div></div>
+    <div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div><div class="feature-title">FPS mejorados (hasta ×2)</div><div class="feature-desc">Más cuadros, menos caídas. Gaming consistente sin stuttering ni drops inesperados.</div></div>
+    <div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg></div><div class="feature-title">Input lag reducido</div><div class="feature-desc">Periféricos y respuesta del sistema más fluida. Cada click, cada movimiento — al instante.</div></div>
+    <div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg></div><div class="feature-title">Red y latencia optimizada</div><div class="feature-desc">Menor ping, conexión más estable en juegos online. Ajuste de DNS y configuración de red avanzada.</div></div>
+    <div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="feature-title">Menos consumo de recursos</div><div class="feature-desc">RAM y CPU libres para lo que realmente importa. Eliminación de bloatware y procesos innecesarios.</div></div>
+    <div class="feature-card"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="feature-title">Sistema estabilizado</div><div class="feature-desc">Menos crashes, freezes y errores inesperados. Informe completo de todo lo realizado.</div></div>
+  </div>
+</section>
+
+<section id="planes">
+  <div class="section-label reveal">Planes disponibles</div>
+  <h2 class="section-title reveal">Elegí tu<br><span style="color:var(--ph-cyan)">nivel.</span></h2>
+  <div class="plans-grid reveal">
+    <div class="plan-card">
+      <div class="plan-name">Básico</div>
+      <div class="plan-price">$45K</div>
+      <div class="plan-price-sub">ARS · 45 USD</div>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li>Limpieza profunda del sistema y registro</li>
+        <li>Eliminación de bloatware y programas innecesarios</li>
+        <li>Optimización de inicio y servicios de Windows</li>
+        <li>Ajuste de plan de energía para mejor rendimiento</li>
+        <li>Configuración del sistema de archivos</li>
+        <li>Actualización y limpieza de drivers básicos</li>
+        <li>Mejora de estabilidad y fluidez general</li>
+        <li>Informe final del proceso realizado</li>
+      </ul>
+      <div style="font-family:var(--ph-font-mono);font-size:0.62rem;color:var(--ph-muted);text-align:center;margin-bottom:1.25rem;letter-spacing:0.1em;">Ideal para uso general y productividad</div>
+      <button class="plan-cta" onclick="selectPlan('Básico — $45.000 ARS / 45 USD')">Agendar Básico →</button>
+    </div>
+    <div class="plan-card">
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">$65K</div>
+      <div class="plan-price-sub">ARS · 65 USD</div>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li>Todo lo incluido en el plan Básico</li>
+        <li>Tweaks específicos para gaming en Windows</li>
+        <li>Reducción avanzada de input lag</li>
+        <li>Optimización de GPU y drivers gráficos</li>
+        <li>Ajuste de red, DNS y configuración de latencia</li>
+        <li>Configuración de prioridades de procesos</li>
+        <li>Optimización de memoria RAM (XMP/EXPO)</li>
+        <li>Mejora de FPS y frametime estable</li>
+      </ul>
+      <div style="font-family:var(--ph-font-mono);font-size:0.62rem;color:var(--ph-muted);text-align:center;margin-bottom:1.25rem;letter-spacing:0.1em;">Ideal para gamers y usuarios exigentes</div>
+      <button class="plan-cta" onclick="selectPlan('Pro — $65.000 ARS / 65 USD')">Agendar Pro →</button>
+    </div>
+    <div class="plan-card featured">
+      <div class="plan-badge">Más elegido</div>
+      <div class="plan-name" style="color:var(--ph-orange)">Extreme</div>
+      <div class="plan-price" style="color:var(--ph-orange)">$85K</div>
+      <div class="plan-price-sub">ARS · 85 USD</div>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li>Todo lo incluido en el plan Pro</li>
+        <li>Configuración avanzada de BIOS/UEFI</li>
+        <li>Overclock o fine-tuning de CPU/GPU (si aplica)</li>
+        <li>Optimización personalizada según hardware</li>
+        <li>Tweaks de kernel y scheduler de Windows</li>
+        <li>Configuración de IRQ y afinidad de núcleos</li>
+        <li>Ajuste fino de temperatura y throttling</li>
+        <li>Prioridad máxima en atención y seguimiento</li>
+      </ul>
+      <div style="font-family:var(--ph-font-mono);font-size:0.62rem;color:var(--ph-muted);text-align:center;margin-bottom:1.25rem;letter-spacing:0.1em;">Para quienes quieren el máximo rendimiento</div>
+      <button class="plan-cta" style="border-color:var(--ph-orange);color:var(--ph-orange);"
+        onmouseenter="this.style.background='var(--ph-orange)';this.style.color='#000'"
+        onmouseleave="this.style.background='transparent';this.style.color='var(--ph-orange)'"
+        onclick="selectPlan('Extreme — $85.000 ARS / 85 USD')">Agendar Extreme →</button>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-label reveal">Por qué elegirnos</div>
+  <h2 class="section-title reveal">No es magia.<br><span style="color:var(--ph-cyan)">Es expertise.</span></h2>
+  <div class="why-grid reveal">
+    <div class="why-card"><div class="why-num">01</div><div><div class="why-title">100% Manual</div><div class="why-desc">Ningún script genérico. Cada ajuste es hecho a mano, analizado y aplicado según tu hardware específico.</div></div></div>
+    <div class="why-card"><div class="why-num">02</div><div><div class="why-title">Vía AnyDesk</div><div class="why-desc">Servicio completamente remoto. Sin necesidad de traer el equipo a ningún lado. Cómodo y eficiente.</div></div></div>
+    <div class="why-card"><div class="why-num">03</div><div><div class="why-title">Sin riesgos</div><div class="why-desc">No se borra información personal ni archivos. Tu data está 100% segura durante todo el proceso.</div></div></div>
+    <div class="why-card"><div class="why-num">04</div><div><div class="why-title">Informe incluido</div><div class="why-desc">Detalle completo de todo lo que se realizó. Transparencia total — sabés exactamente qué cambió.</div></div></div>
+  </div>
+</section>
+
+<div class="form-section" id="agendar">
+  <div class="form-inner">
+    <div style="font-family:var(--ph-font-mono);font-size:0.68rem;font-weight:700;letter-spacing:0.3em;color:var(--ph-cyan);text-transform:uppercase;margin-bottom:1rem;">Agendar turno</div>
+    <h2 style="font-family:var(--ph-font-display);font-size:clamp(2rem,4vw,3rem);text-transform:uppercase;letter-spacing:0.03em;line-height:1;margin-bottom:0.75rem;">¿Listo para el<br><span style="color:var(--ph-cyan)">siguiente nivel?</span></h2>
+    <p style="font-size:0.85rem;color:var(--ph-muted);line-height:1.6;">Completá el formulario y te contactamos por WhatsApp para confirmar tu turno.</p>
+    <div class="form-grid">
+      <div class="form-field"><label class="form-label">Nombre</label><input class="form-input" type="text" placeholder="Tu nombre completo" id="f-nombre"></div>
+      <div class="form-field"><label class="form-label">Plan elegido</label>
+        <select class="form-select" id="f-plan">
+          <option value="" disabled selected>Seleccioná un plan</option>
+          <option>Básico — $45.000 ARS / 45 USD</option>
+          <option>Pro — $65.000 ARS / 65 USD</option>
+          <option>Extreme — $85.000 ARS / 85 USD</option>
+        </select>
+      </div>
+      <div class="form-field full"><label class="form-label">PC (CPU · RAM · GPU)</label><input class="form-input" type="text" placeholder="Ej: Ryzen 5 5600X · 16GB · RTX 3060" id="f-pc"></div>
+      <div class="form-field"><label class="form-label">Horario disponible</label><input class="form-input" type="text" placeholder="Ej: Tardes, fines de semana" id="f-horario"></div>
+      <div class="form-field"><label class="form-label">Medio de pago</label>
+        <select class="form-select" id="f-pago">
+          <option value="" disabled selected>Seleccioná</option>
+          <option>PayPal</option>
+          <option>Mercado Pago</option>
+        </select>
+      </div>
+    </div>
+    <button class="form-submit" onclick="handleWhatsApp()">
+      <svg class="wa-icon" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Enviar solicitud por WhatsApp
+    </button>
+    <p class="form-note">Al hacer click se abre WhatsApp con tu consulta lista para enviar.</p>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo"><span>PULSE</span>HARDWARE</div>
+  <div class="footer-copy">Optimización profesional · Resultados reales garantizados · Servicio remoto</div>
+</footer>
+
+<script>
+function selectPlan(plan) {
+  document.getElementById('f-plan').value = plan;
+  document.getElementById('agendar').scrollIntoView({ behavior: 'smooth' });
+}
+
+function handleWhatsApp() {
+  const nombre = document.getElementById('f-nombre').value.trim();
+  const plan = document.getElementById('f-plan').value;
+  const pc = document.getElementById('f-pc').value.trim();
+  const horario = document.getElementById('f-horario').value.trim();
+  const pago = document.getElementById('f-pago').value;
+  if (!nombre || !plan || !pc) { alert('Por favor completá nombre, plan y especificaciones de PC para continuar.'); return; }
+  const mensaje = `🎮 *PULSEHARDWARE — Solicitud de Turno*\n\n👤 *Nombre:* ${nombre}\n📦 *Plan elegido:* ${plan}\n💻 *PC:* ${pc}\n🕐 *Horario disponible:* ${horario || 'A coordinar'}\n💳 *Medio de pago:* ${pago || 'A confirmar'}\n\n¡Quiero optimizar mi PC!`;
+  window.open(`https://wa.me/5491121919221?text=${encodeURIComponent(mensaje)}`, '_blank');
+}
+
+const reveals = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => { if (e.isIntersecting) { setTimeout(() => e.target.classList.add('visible'), i * 80); io.unobserve(e.target); } });
+}, { threshold: 0.1 });
+reveals.forEach(el => io.observe(el));
+
+function countUp(el, target) {
+  const duration = 1500, start = performance.now();
+  function step(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(ease * target);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+const mo = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('[data-count]').forEach(el => countUp(el, parseInt(el.dataset.count)));
+      mo.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.3 });
+const strip = document.querySelector('.metrics-strip');
+if (strip) mo.observe(strip);
+</script>
+</body>
+</html>
