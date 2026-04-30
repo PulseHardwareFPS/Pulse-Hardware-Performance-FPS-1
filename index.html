@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -192,7 +191,8 @@
       <div style="font-family:var(--ph-font-mono);font-size:0.62rem;color:var(--ph-muted);text-align:center;margin-bottom:1.25rem;letter-spacing:0.1em;">Ideal para uso general y productividad</div>
       <button class="plan-cta" onclick="selectPlan('Básico — $45.000 ARS / 45 USD')">Agendar Básico →</button>
     </div>
-    <div class="plan-card">
+    <div class="plan-card featured">
+      <div class="plan-badge">Más elegido</div>
       <div class="plan-name">Pro</div>
       <div class="plan-price">$65K</div>
       <div class="plan-price-sub">ARS · 65 USD</div>
@@ -210,8 +210,7 @@
       <div style="font-family:var(--ph-font-mono);font-size:0.62rem;color:var(--ph-muted);text-align:center;margin-bottom:1.25rem;letter-spacing:0.1em;">Ideal para gamers y usuarios exigentes</div>
       <button class="plan-cta" onclick="selectPlan('Pro — $65.000 ARS / 65 USD')">Agendar Pro →</button>
     </div>
-    <div class="plan-card featured">
-      <div class="plan-badge">Más elegido</div>
+    <div class="plan-card">
       <div class="plan-name" style="color:var(--ph-orange)">Extreme</div>
       <div class="plan-price" style="color:var(--ph-orange)">$85K</div>
       <div class="plan-price-sub">ARS · 85 USD</div>
@@ -266,8 +265,10 @@
       <div class="form-field"><label class="form-label">Medio de pago</label>
         <select class="form-select" id="f-pago">
           <option value="" disabled selected>Seleccioná</option>
-          <option>PayPal</option>
+          <option>Transferencia bancaria</option>
           <option>Mercado Pago</option>
+          <option>Efectivo</option>
+          <option>Otro</option>
         </select>
       </div>
     </div>
@@ -331,3 +332,4 @@ if (strip) mo.observe(strip);
 </script>
 </body>
 </html>
+
